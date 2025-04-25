@@ -9,7 +9,9 @@ def send_invitation(request):
     if request.method == 'POST':
         form = InvitationForm(request.POST)
         if form.is_valid():
-            invitation = form.save()
+            invitation = form.save(commit = False)
+            invitation.invited_by = request.user  # Burada kullanıcıyı ilişkilendiriyoruz
+            invitation.save()
             invite_link = request.build_absolute_uri(f"/invite/{invitation.token}/")
 
             # E-posta gönderme (geliştirme aşamasında konsola yazılır)
@@ -26,3 +28,11 @@ def send_invitation(request):
     else:
         form = InvitationForm()
     return render(request, 'invitations/send_invitation.html', {'form': form})
+
+def register_with_token(request, token):
+    try:
+        invitation = Invitation.objects.get(token=token)
+    except Invitation.DoesNotExist:
+        return HttpResponse("Geçersiz veya süresi dolmuş davet.", status=400)
+
+    return render(request, 'invitations/register_with_token.html', {'email': invitation.email})
