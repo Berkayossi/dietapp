@@ -7,31 +7,45 @@ from django.http import HttpResponse
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 
 from .forms import InvitationForm
 from .models import Invitation
 
 User = get_user_model()
 
+@login_required
 def send_invitation(request):
+    print("VIEW CALLED!")  # Basit bir print
     if request.method == 'POST':
+        print("POST REQUEST RECEIVED!")  # Basit bir print
         form = InvitationForm(request.POST)
         if form.is_valid():
+            print("FORM IS VALID!")  # Basit bir print
             invitation = form.save(commit=False)
             invitation.invited_by = request.user
             invitation.save()
             invite_link = request.build_absolute_uri(f"/invitations/{invitation.token}/")
 
-            send_mail(
-                subject="Diyet Takip - Davet Linkiniz",
-                message=f"Merhaba, kayıt için link: {invite_link}",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[invitation.email],
-                fail_silently=False,
-            )
+            try:
+                print("TRYING TO SEND EMAIL!")  # Basit bir print
+                send_mail(
+                    subject="Diyet Takip - Davet Linkiniz",
+                    message=f"Merhaba, kayıt için link: {invite_link}",
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[invitation.email],
+                    fail_silently=False,
+                )
+                print("EMAIL SENT!")  # Basit bir print
+            except Exception as e:
+                print(f"EMAIL ERROR: {str(e)}")  # Hata mesajı
+                messages.error(request, f"E-posta gönderimi başarısız oldu: {str(e)}")
+                return redirect('invitations:send_invitation')
 
             messages.success(request, f"{invitation.email} adresine davet gönderildi.")
-            return redirect('send_invitation')
+            return redirect('invitations:send_invitation')
+        else:
+            print(f"FORM ERRORS: {form.errors}")  # Form hataları
     else:
         form = InvitationForm()
     return render(request, 'invitations/send_invitation.html', {'form': form})
