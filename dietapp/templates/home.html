@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Diyet Takip Sistemi{% endblock %}
+
+{% block content %}
+{% if not user.is_authenticated %}
+    <!-- Karşılama Sayfası -->
+    <div class="welcome-container">
+        <div class="row align-items-center min-vh-100">
+            <div class="col-md-6">
+                <h1 class="display-4 mb-4">Diyet Takip Sistemi</h1>
+                <p class="lead mb-4">
+                    Diyetisyenler ve danışanları için özel olarak tasarlanmış, 
+                    profesyonel diyet takip platformu.
+                </p>
+                <div class="features mb-4">
+                    <div class="feature-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Detaylı İlerleme Takibi</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Kişiselleştirilmiş Beslenme Planları</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-comments"></i>
+                        <span>Diyetisyen-Danışan İletişimi</span>
+                    </div>
+                </div>
+                <a href="{% url 'login' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt"></i> Giriş Yap
+                </a>
+            </div>
+            <div class="col-md-6">
+                <img src="{% static 'images/welcome-image.png' %}" alt="Diyet Takip" class="img-fluid">
+            </div>
+        </div>
+    </div>
+{% else %}
+    <!-- Kullanıcı Paneli -->
+    {% if user.user_type == 'dietitian' %}
+        <!-- Diyetisyen Paneli -->
+        <div class="dashboard-container">
+            <h2 class="mb-4">Diyetisyen Paneli</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Toplam Danışan</h5>
+                            <p class="card-text display-4">{{ client_count }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Aktif Planlar</h5>
+                            <p class="card-text display-4">{{ active_plan_count }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Bekleyen Davetler</h5>
+                            <p class="card-text display-4">{{ pending_invitation_count }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Son Aktiviteler</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                {% for activity in recent_activities %}
+                                    <li class="list-group-item">{{ activity }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Müşteri Paneli -->
+        <div class="dashboard-container">
+            <h2 class="mb-4">Danışan Paneli</h2>
+            {% if active_plan %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Aktif Beslenme Planı</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">{{ active_plan.title }}</h6>
+                        <p class="card-text">{{ active_plan.description }}</p>
+                        <a href="#" class="btn btn-primary">Planı Görüntüle</a>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Henüz aktif bir beslenme planınız bulunmuyor.
+                </div>
+            {% endif %}
+            
+            {% if progress %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">İlerleme Durumu</h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- İlerleme grafikleri ve verileri buraya eklenecek -->
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.welcome-container {
+    padding: 2rem 0;
+}
+
+.feature-item {
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+}
+
+.feature-item i {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+    color: var(--primary-color);
+}
+
+.stat-card {
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card .card-title {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+}
+
+.stat-card .display-4 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+</style>
+{% endblock %} 

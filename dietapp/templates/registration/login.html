@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Giriş Yap - Diyet Takip{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="mb-0">Giriş Yap</h2>
+        </div>
+        <div class="card-body">
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> Kullanıcı adı veya şifre hatalı.
+                </div>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="id_username" class="form-label">Kullanıcı Adı</label>
+                    <input type="text" name="username" id="id_username" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_password" class="form-label">Şifre</label>
+                    <input type="password" name="password" id="id_password" class="form-control" required>
+                </div>
+
+                {% if next %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-sign-in-alt"></i> Giriş Yap
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,10 +1,29 @@
 {% extends "base.html" %}
 
+{% block title %}Müşteri Davet Et - Diyet Takip{% endblock %}
+
 {% block content %}
-  <h2>Müşteri Davet Et</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Davet Gönder</button>
-  </form>
+<div class="form-container card">
+    <div class="card-header">
+        <h2 class="mb-0">Müşteri Davet Et</h2>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field.errors }}
+                    {{ field|addclass:"form-control" }}
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary btn-block">
+                <i class="fas fa-paper-plane"></i> Davet Gönder
+            </button>
+        </form>
+    </div>
+</div>
 {% endblock %}

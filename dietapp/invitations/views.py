@@ -77,20 +77,26 @@ def invite_register(request, token):
         elif User.objects.filter(username=username).exists():
             messages.error(request, "Bu kullanıcı adı zaten alınmış.")
         else:
-            # Kullanıcıyı oluştur
-            user = User.objects.create_user(
-                username=username,
-                email=invitation.email,
-                password=password1,
-                user_type='client'  # Davet edilen kullanıcılar client olarak ayarlanıyor
-            )
-            
-            # Davetiyeyi kullanıldı olarak işaretle
-            invitation.used = True
-            invitation.save()
-            
-            login(request, user)
-            messages.success(request, "Başarıyla kayıt oldunuz!")
-            return redirect('home')
+            try:
+                # Kullanıcıyı oluştur
+                user = User.objects.create_user(
+                    username=username,
+                    email=invitation.email,
+                    password=password1,
+                    user_type='client'  # Davet edilen kullanıcılar client olarak ayarlanıyor
+                )
+                
+                # Davetiyeyi kullanıldı olarak işaretle
+                invitation.used = True
+                invitation.save()
+                
+                # Kullanıcıyı sisteme giriş yaptır
+                login(request, user)
+                
+                # Başarılı mesajını göster
+                messages.success(request, "Kayıt işleminiz başarıyla tamamlandı! Hoş geldiniz!")
+                return redirect('home')
+            except Exception as e:
+                messages.error(request, f"Kayıt sırasında bir hata oluştu: {str(e)}")
 
     return render(request, 'invitations/invite_register.html', {'email': invitation.email})
