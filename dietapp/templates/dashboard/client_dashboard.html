@@ -1,0 +1,36 @@
+
+{% block title %}Danışan Paneli - Diyet Takip{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h2 class="mb-4">Danışan Paneli</h2>
+
+    {% if active_plan %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Aktif Beslenme Planı</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">{{ active_plan.title }}</h6>
+                <p class="card-text">{{ active_plan.description }}</p>
+                <a href="#" class="btn btn-primary">Planı Görüntüle</a>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Henüz aktif bir beslenme planınız bulunmuyor.
+        </div>
+    {% endif %}
+    
+    {% if progress %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">İlerleme Durumu</h5>
+            </div>
+            <div class="card-body">
+                <!-- İlerleme grafikleri ve verileri buraya eklenecek -->
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

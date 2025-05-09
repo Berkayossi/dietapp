@@ -1,0 +1,56 @@
+
+{% block title %}Diyetisyen Paneli - Diyet Takip{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h2 class="mb-4">Diyetisyen Paneli</h2>
+    
+    <!-- İstatistik Kartları -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <h5 class="card-title">Toplam Danışan</h5>
+                    <p class="card-text display-4">{{ client_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <h5 class="card-title">Aktif Planlar</h5>
+                    <p class="card-text display-4">{{ active_plan_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <h5 class="card-title">Bekleyen Davetler</h5>
+                    <p class="card-text display-4">{{ pending_invitation_count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Son Aktiviteler -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Son Aktiviteler</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for activity in recent_activities %}
+                            <li class="list-group-item">{{ activity }}</li>
+                        {% empty %}
+                            <li class="list-group-item text-muted">Henüz aktivite bulunmuyor.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
