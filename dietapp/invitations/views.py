@@ -3,11 +3,13 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import login
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 from .forms import InvitationForm
 from .models import Invitation
@@ -100,3 +102,126 @@ def invite_register(request, token):
                 messages.error(request, f"Kayıt sırasında bir hata oluştu: {str(e)}")
 
     return render(request, 'invitations/invite_register.html', {'email': invitation.email})
+
+@login_required
+def create_invitation(request):
+    if not request.user.is_staff:
+        return JsonResponse({
+            'success': False,
+            'error': 'Bu işlemi yapmak için yönetici yetkisine sahip olmanız gerekiyor.'
+        })
+    
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        if not email:
+            return JsonResponse({
+                'success': False,
+                'error': 'Lütfen bir e-posta adresi girin.'
+            })
+        
+        if Invitation.objects.filter(email=email, used=False).exists():
+            return JsonResponse({
+                'success': False,
+                'error': 'Bu e-posta adresi için zaten aktif bir davetiye bulunuyor. Lütfen önceki davetiyenin süresinin dolmasını bekleyin veya farklı bir e-posta adresi kullanın.'
+            })
+        
+        invitation = Invitation.objects.create(email=email)
+        invite_link = request.build_absolute_uri(f"/invitations/{invitation.token}/")
+        
+        # HTML email template
+        html_message = render_to_string('invitations/email/invitation_email.html', {
+            'invite_link': invite_link,
+            'email': email
+        })
+        
+        # Plain text version
+        plain_message = strip_tags(html_message)
+        
+        try:
+            send_mail(
+                subject="Diyet Takip Sistemi - Davet Linkiniz",
+                message=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+            return JsonResponse({'success': True})
+        except Exception as e:
+            invitation.delete()
+            error_message = str(e)
+            if "SMTP" in error_message:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'E-posta gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.'
+                })
+            elif "timeout" in error_message.lower():
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'E-posta sunucusuna bağlanırken zaman aşımı oluştu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.'
+                })
+            else:
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.'
+                })
+    
+    return JsonResponse({
+        'success': False,
+        'error': 'Geçersiz istek. Lütfen sayfayı yenileyip tekrar deneyin.'
+    })
+
+@login_required
+def resend_invitation(request, token):
+    if not request.user.is_staff:
+        return JsonResponse({
+            'success': False,
+            'error': 'Bu işlemi yapmak için yönetici yetkisine sahip olmanız gerekiyor.'
+        })
+    
+    invitation = get_object_or_404(Invitation, token=token)
+    
+    if invitation.used:
+        return JsonResponse({
+            'success': False,
+            'error': 'Bu davetiye daha önce kullanılmış. Yeni bir davetiye oluşturmanız gerekiyor.'
+        })
+        
+    invite_link = request.build_absolute_uri(f"/invitations/{invitation.token}/")
+    
+    # HTML email template
+    html_message = render_to_string('invitations/email/invitation_email.html', {
+        'invite_link': invite_link,
+        'email': invitation.email
+    })
+    
+    # Plain text version
+    plain_message = strip_tags(html_message)
+    
+    try:
+        send_mail(
+            subject="Diyet Takip Sistemi - Davet Linkiniz",
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[invitation.email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        return JsonResponse({'success': True})
+    except Exception as e:
+        error_message = str(e)
+        if "SMTP" in error_message:
+            return JsonResponse({
+                'success': False,
+                'error': 'E-posta gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.'
+            })
+        elif "timeout" in error_message.lower():
+            return JsonResponse({
+                'success': False, 
+                'error': 'E-posta sunucusuna bağlanırken zaman aşımı oluştu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.'
+            })
+        else:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.'
+            })

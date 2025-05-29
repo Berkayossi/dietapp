@@ -1,4 +1,5 @@
-
+{% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Yönetici Paneli - Diyet Takip{% endblock %}
 
@@ -42,6 +43,60 @@
         </div>
     </div>
 
+    <!-- Davetiye Yönetimi -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Davetiye Yönetimi</h5>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newInvitationModal">
+                        <i class="fas fa-plus"></i> Yeni Davetiye
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>E-posta</th>
+                                    <th>Oluşturulma Tarihi</th>
+                                    <th>Durum</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invitation in invitations %}
+                                <tr>
+                                    <td>{{ invitation.email }}</td>
+                                    <td>{{ invitation.created_at|date:"d.m.Y H:i" }}</td>
+                                    <td>
+                                        {% if invitation.used %}
+                                            <span class="badge bg-success">Kullanıldı</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">Bekliyor</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if not invitation.used %}
+                                        <button class="btn btn-sm btn-info" onclick="resendInvitation('{{ invitation.token }}')">
+                                            <i class="fas fa-paper-plane"></i> Tekrar Gönder
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Henüz davetiye bulunmuyor.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Son Aktiviteler -->
     <div class="row mt-4">
         <div class="col-12">
@@ -65,4 +120,34 @@
         </div>
     </div>
 </div>
+
+<!-- Yeni Davetiye Modal -->
+<div class="modal fade" id="newInvitationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yeni Davetiye Oluştur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="invitationForm" onsubmit="return sendInvitation(event)">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">E-posta Adresi</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div id="invitationResult" class="alert d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary" id="submitButton">Davetiye Gönder</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+{% include 'js/invitation.js' %}
+{% endblock %}
 {% endblock %} 
