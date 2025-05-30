@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'plans',
     'invitations',
     'invitations.templatetags',
+    'meals',
 ]
 
 MIDDLEWARE = [

@@ -3,121 +3,131 @@
 
 {% block title %}Yönetici Paneli - Diyet Takip{% endblock %}
 
-{% block content %}
-<div class="dashboard-container">
-    <h2 class="mb-4">Yönetici Paneli</h2>
-    
-    <!-- İstatistik Kartları -->
-    <div class="row">
-        <div class="col-md-3">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <h5 class="card-title">Toplam Danışan</h5>
-                    <p class="card-text display-4">{{ client_count }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <h5 class="card-title">Aktif Planlar</h5>
-                    <p class="card-text display-4">{{ active_plan_count }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <h5 class="card-title">Bekleyen Davetler</h5>
-                    <p class="card-text display-4">{{ pending_invitation_count }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card stat-card">
-                <div class="card-body">
-                    <h5 class="card-title">Aktif Danışan</h5>
-                    <p class="card-text display-4">{{ active_client_count }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+{% endblock %}
 
-    <!-- Davetiye Yönetimi -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Davetiye Yönetimi</h5>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newInvitationModal">
-                        <i class="fas fa-plus"></i> Yeni Davetiye
-                    </button>
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'includes/sidebar.html' %}
+
+        <!-- Ana İçerik -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Yönetici Paneli</h1>
+            </div>
+
+            <!-- İstatistik Kartları -->
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Toplam Danışan</h5>
+                            <p class="card-text display-4">{{ client_count }}</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>E-posta</th>
-                                    <th>Oluşturulma Tarihi</th>
-                                    <th>Durum</th>
-                                    <th>İşlemler</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for invitation in invitations %}
-                                <tr>
-                                    <td>{{ invitation.email }}</td>
-                                    <td>{{ invitation.created_at|date:"d.m.Y H:i" }}</td>
-                                    <td>
-                                        {% if invitation.used %}
-                                            <span class="badge bg-success">Kullanıldı</span>
-                                        {% else %}
-                                            <span class="badge bg-warning">Bekliyor</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if not invitation.used %}
-                                        <button class="btn btn-sm btn-info" onclick="resendInvitation('{{ invitation.token }}')">
-                                            <i class="fas fa-paper-plane"></i> Tekrar Gönder
-                                        </button>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center">Henüz davetiye bulunmuyor.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Aktif Planlar</h5>
+                            <p class="card-text display-4">{{ active_plan_count }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Bekleyen Davetler</h5>
+                            <p class="card-text display-4">{{ pending_invitation_count }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stat-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Aktif Danışan</h5>
+                            <p class="card-text display-4">{{ active_client_count }}</p>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Son Aktiviteler -->
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Son Aktiviteler</h5>
-                    <a href="{% url 'admin:index' %}" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-cog"></i> Yönetim Paneli
-                    </a>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        {% for activity in recent_activities %}
-                            <li class="list-group-item">{{ activity }}</li>
-                        {% empty %}
-                            <li class="list-group-item text-muted">Henüz aktivite bulunmuyor.</li>
-                        {% endfor %}
-                    </ul>
+            <!-- Davetiye Yönetimi -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Davetiye Yönetimi</h5>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newInvitationModal">
+                                <i class="fas fa-plus"></i> Yeni Davetiye
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>E-posta</th>
+                                            <th>Oluşturulma Tarihi</th>
+                                            <th>Durum</th>
+                                            <th>İşlemler</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for invitation in invitations %}
+                                        <tr>
+                                            <td>{{ invitation.email }}</td>
+                                            <td>{{ invitation.created_at|date:"d.m.Y H:i" }}</td>
+                                            <td>
+                                                {% if invitation.used %}
+                                                    <span class="badge bg-success">Kullanıldı</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Bekliyor</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if not invitation.used %}
+                                                <button class="btn btn-sm btn-info" onclick="resendInvitation('{{ invitation.token }}')">
+                                                    <i class="fas fa-paper-plane"></i> Tekrar Gönder
+                                                </button>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="4" class="text-center">Henüz davetiye bulunmuyor.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Son Aktiviteler -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">Son Aktiviteler</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                {% for activity in recent_activities %}
+                                    <li class="list-group-item">{{ activity }}</li>
+                                {% empty %}
+                                    <li class="list-group-item text-muted">Henüz aktivite bulunmuyor.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 </div>
 
@@ -148,6 +158,6 @@
 </div>
 
 {% block extra_js %}
-{% include 'js/invitation.js' %}
+<script src="{% static 'js/invitation.js' %}"></script>
 {% endblock %}
 {% endblock %} 

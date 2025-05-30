@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Beslenme Planlarım - Diyet Takip{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sol Menü -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">
+                            <i class="fas fa-home"></i> Ana Sayfa
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="{% url 'plans:my_plans' %}">
+                            <i class="fas fa-utensils"></i> Beslenme Planlarım
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'clients:my_progress' %}">
+                            <i class="fas fa-chart-line"></i> İlerlemem
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Ana İçerik -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Beslenme Planlarım</h1>
+            </div>
+
+            <!-- Aktif Plan -->
+            {% if active_plan %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ active_plan.program.title }}</h5>
+                            <p class="card-text">{{ active_plan.program.description }}</p>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <p class="mb-1">
+                                        <strong>Başlangıç:</strong> {{ active_plan.start_date|date:"d/m/Y" }}
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1">
+                                        <strong>Bitiş:</strong> {{ active_plan.end_date|date:"d/m/Y" }}
+                                    </p>
+                                </div>
+                                <div class="col-md-4">
+                                    <p class="mb-1">
+                                        <strong>Kalan Gün:</strong> {{ active_plan.remaining_days }}
+                                    </p>
+                                </div>
+                            </div>
+                            <a href="{% url 'plans:plan_detail' active_plan.id %}" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> Detayları Görüntüle
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Tüm Planlar -->
+            <div class="row">
+                {% for plan in plans %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ plan.program.title }}</h5>
+                            <p class="card-text">{{ plan.program.description }}</p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <p class="mb-1">
+                                        <strong>Başlangıç:</strong><br>
+                                        {{ plan.start_date|date:"d/m/Y" }}
+                                    </p>
+                                </div>
+                                <div class="col-6">
+                                    <p class="mb-1">
+                                        <strong>Bitiş:</strong><br>
+                                        {{ plan.end_date|date:"d/m/Y" }}
+                                    </p>
+                                </div>
+                            </div>
+                            <p class="card-text">
+                                <strong>Durum:</strong> 
+                                <span class="badge {% if plan.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if plan.is_active %}Aktif{% else %}Tamamlandı{% endif %}
+                                </span>
+                            </p>
+                            <a href="{% url 'plans:plan_detail' plan.id %}" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> Detayları Görüntüle
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        Henüz size atanmış bir beslenme planı bulunmuyor.
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %} 

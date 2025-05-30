@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ meal.name }} - Öğün Detayı{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/nutrition_plan.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'includes/sidebar.html' %}
+
+        <!-- Ana İçerik -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center mb-4">
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'plans:nutrition_plan_detail' meal.program.id %}" class="btn btn-link text-dark me-3">
+                        <i class="fas fa-arrow-left fa-lg"></i>
+                    </a>
+                    <div>
+                        <h1 class="h2 mb-1">{{ meal.name }}</h1>
+                        <p class="text-muted mb-0">{{ meal.get_meal_type_display }} - Gün {{ meal.day_number }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Öğün Detayları -->
+            <div class="row">
+                <!-- Sol Kolon - Öğün Bilgileri -->
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Öğün Bilgileri</h5>
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editMealModal">
+                                <i class="fas fa-edit me-2"></i>Düzenle
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="meal-info">
+                                <div class="info-item">
+                                    <span class="info-label">Öğün Tipi:</span>
+                                    <span class="info-value">{{ meal.get_meal_type_display }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Saat:</span>
+                                    <span class="info-value">{{ meal.time|time:"H:i" }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Gün:</span>
+                                    <span class="info-value">{{ meal.day_number }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">Açıklama:</span>
+                                    <span class="info-value">{{ meal.description|default:"Açıklama yok" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Besin Değerleri -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Toplam Besin Değerleri</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="nutrition-values">
+                                <div class="nutrition-value">
+                                    <span class="nutrition-label">Kalori:</span>
+                                    <span class="nutrition-amount">{{ meal.calories }} kcal</span>
+                                </div>
+                                <div class="nutrition-value">
+                                    <span class="nutrition-label">Protein:</span>
+                                    <span class="nutrition-amount">{{ meal.protein }} g</span>
+                                </div>
+                                <div class="nutrition-value">
+                                    <span class="nutrition-label">Karbonhidrat:</span>
+                                    <span class="nutrition-amount">{{ meal.carbs }} g</span>
+                                </div>
+                                <div class="nutrition-value">
+                                    <span class="nutrition-label">Yağ:</span>
+                                    <span class="nutrition-amount">{{ meal.fat }} g</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sağ Kolon - Besin Listesi -->
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Besinler</h5>
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addFoodModal">
+                                <i class="fas fa-plus me-2"></i>Besin Ekle
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Besin</th>
+                                            <th>Miktar</th>
+                                            <th>Kalori</th>
+                                            <th>Protein</th>
+                                            <th>Karbonhidrat</th>
+                                            <th>Yağ</th>
+                                            <th>İşlemler</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for meal_food in meal.meal_foods.all %}
+                                        <tr>
+                                            <td>{{ meal_food.food.name }}</td>
+                                            <td>{{ meal_food.amount }}g</td>
+                                            <td>{{ meal_food.calories }} kcal</td>
+                                            <td>{{ meal_food.protein }}g</td>
+                                            <td>{{ meal_food.carbs }}g</td>
+                                            <td>{{ meal_food.fat }}g</td>
+                                            <td>
+                                                <button type="button" class="btn btn-danger btn-sm" 
+                                                        onclick="deleteFood({{ meal_food.id }})">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="7" class="text-center text-muted">
+                                                Henüz besin eklenmemiş
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Besin Ekleme Modalı -->
+<div class="modal fade" id="addFoodModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Besin Ekle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'plans:add_meal_food' meal.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="food" class="form-label">Besin</label>
+                        <select name="food" id="food" class="form-select" required>
+                            <option value="">---------</option>
+                            {% for food in foods %}
+                            <option value="{{ food.id }}" 
+                                data-calories="{{ food.calories }}"
+                                data-protein="{{ food.protein }}"
+                                data-carbs="{{ food.carbs }}"
+                                data-fat="{{ food.fat }}">
+                                {{ food.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="amount" class="form-label">Miktar (g)</label>
+                        <input type="number" name="amount" id="amount" class="form-control" step="0.01" min="0" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">Ekle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Öğün Düzenleme Modalı -->
+<div class="modal fade" id="editMealModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Öğün Bilgilerini Düzenle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'plans:edit_meal' meal.program.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="meal_id" value="{{ meal.id }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="id_name" class="form-label">Öğün Adı</label>
+                        <input type="text" name="name" id="id_name" class="form-control" value="{{ meal.name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_meal_type" class="form-label">Öğün Tipi</label>
+                        <select name="meal_type" id="id_meal_type" class="form-select" required>
+                            {% for value, label in form.fields.meal_type.choices %}
+                            <option value="{{ value }}" {% if meal.meal_type == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_time" class="form-label">Saat</label>
+                        <input type="time" name="time" id="id_time" class="form-control" value="{{ meal.time|time:'H:i' }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_day_number" class="form-label">Gün</label>
+                        <input type="number" name="day_number" id="id_day_number" class="form-control" value="{{ meal.day_number }}" min="1" max="{{ meal.program.total_days }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_description" class="form-label">Açıklama</label>
+                        <textarea name="description" id="id_description" class="form-control" rows="3">{{ meal.description }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/nutrition_plan.js' %}"></script>
+<script>
+function deleteFood(mealFoodId) {
+    if (confirm('Bu besini silmek istediğinizden emin misiniz?')) {
+        fetch(`/plans/delete-meal-food/${mealFoodId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Besin silinirken bir hata oluştu.');
+            }
+        });
+    }
+}
+</script>
+{% endblock %} 

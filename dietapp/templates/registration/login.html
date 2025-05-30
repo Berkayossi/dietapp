@@ -1,41 +1,115 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Giriş Yap - Diyet Takip{% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <div class="card">
-        <div class="card-header">
-            <h2 class="mb-0">Giriş Yap</h2>
-        </div>
-        <div class="card-body">
-            {% if form.errors %}
-                <div class="alert alert-danger">
-                    <i class="fas fa-exclamation-circle"></i> Kullanıcı adı veya şifre hatalı.
+<div class="container">
+    <div class="row justify-content-center align-items-center min-vh-100">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3 class="mb-0">
+                        <i class="fas fa-user-circle me-2"></i>
+                        Giriş Yap
+                    </h3>
                 </div>
-            {% endif %}
+                <div class="card-body p-4">
+                    {% if form.errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Kullanıcı adı veya şifre hatalı.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
 
-            <form method="post">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label for="id_username" class="form-label">Kullanıcı Adı</label>
-                    <input type="text" name="username" id="id_username" class="form-control" required>
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <div class="form-floating mb-3">
+                            <input type="text" name="username" id="id_username" class="form-control" placeholder="Kullanıcı Adı" required>
+                            <label for="id_username">
+                                <i class="fas fa-user me-2"></i>
+                                Kullanıcı Adı
+                            </label>
+                        </div>
+                        
+                        <div class="form-floating mb-4">
+                            <input type="password" name="password" id="id_password" class="form-control" placeholder="Şifre" required>
+                            <label for="id_password">
+                                <i class="fas fa-lock me-2"></i>
+                                Şifre
+                            </label>
+                        </div>
+
+                        {% if next %}
+                            <input type="hidden" name="next" value="{{ next }}">
+                        {% endif %}
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i>
+                                Giriş Yap
+                            </button>
+                        </div>
+                    </form>
                 </div>
-                
-                <div class="form-group">
-                    <label for="id_password" class="form-label">Şifre</label>
-                    <input type="password" name="password" id="id_password" class="form-control" required>
+                <div class="card-footer text-center py-3 bg-light">
+                    <div class="small">
+                        <a href="{% url 'accounts:register' %}" class="text-decoration-none">
+                            <i class="fas fa-user-plus me-1"></i>
+                            Hesabınız yok mu? Kayıt olun
+                        </a>
+                    </div>
                 </div>
-
-                {% if next %}
-                    <input type="hidden" name="next" value="{{ next }}">
-                {% endif %}
-
-                <button type="submit" class="btn btn-primary btn-block">
-                    <i class="fas fa-sign-in-alt"></i> Giriş Yap
-                </button>
-            </form>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+.card {
+    backdrop-filter: blur(10px);
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: #0d6efd;
+}
+
+.btn-primary {
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-footer a {
+    transition: all 0.3s ease;
+}
+
+.card-footer a:hover {
+    color: #0d6efd !important;
+    text-decoration: underline !important;
+}
+</style>
+
+<script>
+// Form doğrulama için
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
 {% endblock %} 

@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ client.user.get_full_name|default:client.user.username }} - Diyet Takip{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'includes/sidebar.html' %}
+
+        <!-- Ana İçerik -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <div>
+                    <h1 class="h2">{{ client.user.get_full_name|default:client.user.username }}</h1>
+                    <p class="text-muted">{{ client.user.email }}</p>
+                </div>
+            </div>
+
+            <!-- Müşteri Detayları -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Kişisel Bilgiler</h5>
+                            <p class="card-text">
+                                <strong>E-posta:</strong> {{ client.user.email }}<br>
+                                <strong>Telefon:</strong> {{ client.phone|default:"Belirtilmemiş" }}<br>
+                                <strong>Doğum Tarihi:</strong> {{ client.birth_date|date:"d/m/Y"|default:"Belirtilmemiş" }}<br>
+                                <strong>Adres:</strong> {{ client.address|default:"Belirtilmemiş" }}<br>
+                                <strong>Kayıt Tarihi:</strong> {{ client.created_at|date:"d/m/Y" }}<br>
+                                <strong>Son Güncelleme:</strong> {{ client.updated_at|date:"d/m/Y" }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Aktif Beslenme Programı</h5>
+                            {% if client.user.plans.filter.is_active %}
+                                {% with active_plan=client.user.plans.filter.is_active.first %}
+                                <p class="card-text">
+                                    <strong>Program:</strong> {{ active_plan.title }}<br>
+                                    <strong>Başlangıç:</strong> {{ active_plan.start_date|date:"d/m/Y" }}<br>
+                                    <strong>Bitiş:</strong> {{ active_plan.end_date|date:"d/m/Y" }}
+                                </p>
+                                <a href="{% url 'plans:nutrition_plan_detail' active_plan.id %}" class="btn btn-primary btn-sm">
+                                    Programı Görüntüle
+                                </a>
+                                {% endwith %}
+                            {% else %}
+                                <p class="card-text text-muted">Aktif beslenme programı bulunmuyor.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- İlerleme Kayıtları -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">İlerleme Kayıtları</h5>
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newProgressModal">
+                                <i class="fas fa-plus"></i> Yeni Kayıt
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Tarih</th>
+                                            <th>Kilo</th>
+                                            <th>Yağ Oranı</th>
+                                            <th>Bel Çevresi</th>
+                                            <th>Notlar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for record in client.progress_records.all %}
+                                        <tr>
+                                            <td>{{ record.date|date:"d/m/Y" }}</td>
+                                            <td>{{ record.weight }} kg</td>
+                                            <td>{{ record.body_fat|default:"-" }}%</td>
+                                            <td>{{ record.waist|default:"-" }} cm</td>
+                                            <td>{{ record.notes|default:"-" }}</td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="text-center">Henüz ilerleme kaydı bulunmuyor.</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Yeni İlerleme Kaydı Modal -->
+<div class="modal fade" id="newProgressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yeni İlerleme Kaydı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field.errors }}
+                        {{ field }}
+                        {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

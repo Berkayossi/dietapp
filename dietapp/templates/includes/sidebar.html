@@ -1,0 +1,32 @@
+<!-- Sol Menü -->
+<div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+    <div class="position-sticky pt-3">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}">
+                    <i class="fas fa-home"></i> Ana Sayfa
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'nutrition_plans' %}active{% endif %}" href="{% url 'plans:nutrition_plans' %}">
+                    <i class="fas fa-utensils"></i> Beslenme Programları
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'food_list' %}active{% endif %}" href="{% url 'meals:food_list' %}">
+                    <i class="fas fa-apple-alt"></i> Besinler
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'clients' %}active{% endif %}" href="{% url 'clients:client_list' %}">
+                    <i class="fas fa-users"></i> Müşteriler
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'admin:index' %}">
+                    <i class="fas fa-cog"></i> Yönetim Paneli
+                </a>
+            </li>
+        </ul>
+    </div>
+</div> 

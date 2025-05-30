@@ -14,7 +14,7 @@ function sendInvitation(event) {
     resultDiv.classList.add('d-none');
     resultDiv.classList.remove('alert-success', 'alert-danger');
     
-    fetch('/invitations/create/', {
+    fetch('{% url "invitations:create_invitation" %}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -64,7 +64,7 @@ function sendInvitation(event) {
 
 function resendInvitation(token) {
     if (confirm('Davetiyeyi tekrar göndermek istediğinizden emin misiniz?')) {
-        fetch(`/invitations/${token}/resend/`, {
+        fetch(`{% url "invitations:resend_invitation" token=0 %}`.replace('0', token), {
             method: 'POST',
             headers: {
                 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,

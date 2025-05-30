@@ -13,6 +13,7 @@ from django.utils.html import strip_tags
 
 from .forms import InvitationForm
 from .models import Invitation
+from clients.models import Client
 
 User = get_user_model()
 
@@ -87,6 +88,9 @@ def invite_register(request, token):
                     password=password1,
                     user_type='client'  # Davet edilen kullanıcılar client olarak ayarlanıyor
                 )
+                
+                # Client profilini oluştur
+                Client.objects.create(user=user)
                 
                 # Davetiyeyi kullanıldı olarak işaretle
                 invitation.used = True

@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Müşteriler - Diyet Takip{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        {% include 'includes/sidebar.html' %}
+
+        <!-- Ana İçerik -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Müşteriler</h1>
+            </div>
+
+            <!-- Müşteri Listesi -->
+            <div class="row">
+                {% for client in clients %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ client.user.get_full_name|default:client.user.username }}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">{{ client.user.email }}</h6>
+                            <p class="card-text">
+                                <strong>Telefon:</strong> {{ client.phone|default:"Belirtilmemiş" }}<br>
+                                <strong>Doğum Tarihi:</strong> {{ client.birth_date|date:"d/m/Y"|default:"Belirtilmemiş" }}<br>
+                                <strong>Kayıt Tarihi:</strong> {{ client.created_at|date:"d/m/Y" }}
+                            </p>
+                            <a href="{% url 'clients:client_detail' client.id %}" class="btn btn-primary btn-sm">
+                                Detayları Gör
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        Henüz müşteri bulunmuyor.
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+</div>
+
+{% endblock %} 

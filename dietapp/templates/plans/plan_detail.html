@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ plan.program.title }} - Diyet Takip{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sol Menü -->
+        <div class="col-md-3 col-lg-2 d-md-block bg-light sidebar collapse">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'home' %}">
+                            <i class="fas fa-home"></i> Ana Sayfa
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'plans:my_plans' %}">
+                            <i class="fas fa-utensils"></i> Beslenme Planlarım
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'clients:my_progress' %}">
+                            <i class="fas fa-chart-line"></i> İlerlemem
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Ana İçerik -->
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <div>
+                    <h1 class="h2">{{ plan.program.title }}</h1>
+                    <p class="text-muted">
+                        {{ plan.start_date|date:"d/m/Y" }} - {{ plan.end_date|date:"d/m/Y" }}
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'plans:today_meals' %}" class="btn btn-primary">
+                        <i class="fas fa-calendar-day"></i> Bugünün Öğünleri
+                    </a>
+                </div>
+            </div>
+
+            <!-- Plan Detayları -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Program Bilgileri</h5>
+                            <p class="card-text">{{ plan.program.description }}</p>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1">
+                                        <strong>Başlangıç:</strong><br>
+                                        {{ plan.start_date|date:"d/m/Y" }}
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p class="mb-1">
+                                        <strong>Bitiş:</strong><br>
+                                        {{ plan.end_date|date:"d/m/Y" }}
+                                    </p>
+                                </div>
+                            </div>
+                            <p class="card-text">
+                                <strong>Durum:</strong> 
+                                <span class="badge {% if plan.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if plan.is_active %}Aktif{% else %}Tamamlandı{% endif %}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Öğün Listesi -->
+            <div class="row">
+                {% for day_number, day_meals in days.items %}
+                <div class="col-12 mb-4">
+                    <h3>Gün {{ day_number }}</h3>
+                    <div class="row">
+                        {% for meal in day_meals %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ meal.get_meal_type_display }}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">{{ meal.name }}</h6>
+                                    <p class="card-text">{{ meal.description }}</p>
+                                    <div class="row text-center">
+                                        <div class="col">
+                                            <small class="text-muted">Kalori</small>
+                                            <p class="mb-0">{{ meal.calories }}</p>
+                                        </div>
+                                        <div class="col">
+                                            <small class="text-muted">Protein</small>
+                                            <p class="mb-0">{{ meal.protein }}g</p>
+                                        </div>
+                                        <div class="col">
+                                            <small class="text-muted">Karbonhidrat</small>
+                                            <p class="mb-0">{{ meal.carbs }}g</p>
+                                        </div>
+                                        <div class="col">
+                                            <small class="text-muted">Yağ</small>
+                                            <p class="mb-0">{{ meal.fat }}g</p>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            Saat: {{ meal.time|time:"H:i" }}
+                                        </small>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        Bu programa henüz öğün eklenmemiş.
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %} 

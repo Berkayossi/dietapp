@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Bugünün Öğünleri{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Bugünün Öğünleri</h1>
+
+    {% if error %}
+    <div class="alert alert-warning">
+        {{ error }}
+    </div>
+    {% else %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">{{ plan.title }}</h5>
+            <p class="card-text">
+                <small class="text-muted">Gün {{ day_number }}</small>
+            </p>
+        </div>
+    </div>
+
+    {% for meal in meals %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="card-title">{{ meal.get_meal_type_display }} - {{ meal.name }}</h5>
+                    <p class="card-text">{{ meal.description }}</p>
+                    <p class="card-text">
+                        <small class="text-muted">Saat: {{ meal.time|time:"H:i" }}</small>
+                    </p>
+                </div>
+                <div class="text-end">
+                    <div class="badge bg-primary mb-2">{{ meal.calories }} kcal</div>
+                    <div class="small">
+                        <div>Protein: {{ meal.protein }}g</div>
+                        <div>Karbonhidrat: {{ meal.carbs }}g</div>
+                        <div>Yağ: {{ meal.fat }}g</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-info">
+        Bugün için planlanmış öğün bulunmamaktadır.
+    </div>
+    {% endfor %}
+
+    <div class="mt-4">
+        <a href="{% url 'plans:plan_detail' plan.id %}" class="btn btn-primary">
+            Tüm Programı Görüntüle
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 
