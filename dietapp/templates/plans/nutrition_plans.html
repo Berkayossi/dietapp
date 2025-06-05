@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/sidebar.css' %}">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -20,48 +21,106 @@
                     <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#newProgramModal">
                         <i class="fas fa-plus"></i> Yeni Program
                     </button>
-                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#assignPlanModal">
-                        <i class="fas fa-user-plus"></i> Müşteriye Ata
-                    </button>
                 </div>
             </div>
 
-            <!-- Program Listesi -->
-            <div class="row">
-                {% for program in programs %}
-                <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ program.title }}</h5>
-                            <p class="card-text">{{ program.description|truncatewords:20 }}</p>
-                            <p class="card-text">
-                                <small class="text-muted">
-                                    Toplam Gün: {{ program.total_days }}
-                                </small>
-                            </p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="badge {% if program.is_active %}bg-success{% else %}bg-secondary{% endif %}">
-                                    {% if program.is_active %}Aktif{% else %}Pasif{% endif %}
-                                </span>
-                                <div>
-                                    <a href="{% url 'plans:nutrition_plan_detail' program.id %}" class="btn btn-primary btn-sm">
-                                        Detayları Gör
-                                    </a>
-                                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#assignPlanModal" data-program-id="{{ program.id }}">
-                                        Ata
-                                    </button>
+            <!-- Sekmeler -->
+            <ul class="nav nav-tabs mb-4" id="programTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="template-tab" data-bs-toggle="tab" data-bs-target="#template" type="button" role="tab" aria-controls="template" aria-selected="true">
+                        Şablon Programlar
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="client-tab" data-bs-toggle="tab" data-bs-target="#client" type="button" role="tab" aria-controls="client" aria-selected="false">
+                        Müşteri Programları
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Sekme İçerikleri -->
+            <div class="tab-content" id="programTabsContent">
+                <!-- Şablon Programlar -->
+                <div class="tab-pane fade show active" id="template" role="tabpanel" aria-labelledby="template-tab">
+                    <div class="row">
+                        {% for program in programs %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ program.title }}</h5>
+                                    <p class="card-text">{{ program.description|truncatewords:20 }}</p>
+                                    <p class="card-text">
+                                        <small class="text-muted">
+                                            Toplam Gün: {{ program.total_days }}
+                                        </small>
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge {% if program.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {% if program.is_active %}Aktif{% else %}Pasif{% endif %}
+                                        </span>
+                                        <div>
+                                            <a href="{% url 'plans:nutrition_plan_detail' program.id %}" class="btn btn-primary btn-sm">
+                                                Detayları Gör
+                                            </a>
+                                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#assignPlanModal" data-program-id="{{ program.id }}">
+                                                Ata
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteProgramModal" data-program-id="{{ program.id }}" data-program-title="{{ program.title }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                Henüz beslenme programı bulunmuyor.
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% empty %}
-                <div class="col-12">
-                    <div class="alert alert-info">
-                        Henüz beslenme programı bulunmuyor.
+
+                <!-- Müşteri Programları -->
+                <div class="tab-pane fade" id="client" role="tabpanel" aria-labelledby="client-tab">
+                    <div class="row">
+                        {% for plan in client_plans %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ plan.program_copy.title }}</h5>
+                                    <p class="card-text">
+                                        <strong>Müşteri:</strong> {{ plan.client.user.get_full_name|default:plan.client.user.username }}<br>
+                                        <strong>Başlangıç:</strong> {{ plan.start_date|date:"d/m/Y" }}<br>
+                                        <strong>Bitiş:</strong> {{ plan.end_date|date:"d/m/Y" }}
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge {% if plan.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {% if plan.is_active %}Aktif{% else %}Pasif{% endif %}
+                                        </span>
+                                        <div>
+                                            <a href="{% url 'plans:nutrition_plan_detail' plan.program_copy.id %}" class="btn btn-primary btn-sm">
+                                                Detayları Gör
+                                            </a>
+                                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteProgramModal" data-program-id="{{ program.id }}" data-program-title="{{ program.title }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                Henüz müşteriye atanmış program bulunmuyor.
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% endfor %}
             </div>
         </main>
     </div>
@@ -110,22 +169,65 @@
                 {% csrf_token %}
                 <div class="modal-body">
                     <input type="hidden" name="program_id" id="program_id">
-                    {% for field in plan_form %}
                     <div class="mb-3">
-                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                        {{ field.errors }}
-                        {{ field }}
-                        {% if field.help_text %}
-                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                        <label for="id_client" class="form-label">Müşteri</label>
+                        {% if clients %}
+                        <select name="client" id="id_client" class="form-select" required>
+                            <option value="">Müşteri Seçin</option>
+                            {% for client in clients %}
+                            <option value="{{ client.id }}">{{ client.user.get_full_name|default:client.user.username }}</option>
+                            {% endfor %}
+                        </select>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            Henüz müşteri kaydı bulunmuyor. Önce müşteri eklemelisiniz.
+                        </div>
                         {% endif %}
                     </div>
-                    {% endfor %}
+                    <div class="mb-3">
+                        <label for="id_start_date" class="form-label">Başlangıç Tarihi</label>
+                        <input type="date" name="start_date" id="id_start_date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_end_date" class="form-label">Bitiş Tarihi</label>
+                        <input type="date" name="end_date" id="id_end_date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" name="is_active" id="id_is_active" class="form-check-input" value="on" checked>
+                            <label for="id_is_active" class="form-check-label">Aktif</label>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
-                    <button type="submit" class="btn btn-primary">Ata</button>
+                    <button type="submit" class="btn btn-primary" {% if not clients %}disabled{% endif %}>Ata</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Silme Onay Modalı -->
+<div class="modal fade" id="deleteProgramModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Programı Sil</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bu programı silmek istediğinizden emin misiniz?</p>
+                <p class="text-danger" id="deleteProgramTitle"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <form method="post" action="{% url 'plans:delete_program' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="program_id" id="delete_program_id">
+                    <button type="submit" class="btn btn-danger">Sil</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -138,9 +240,90 @@ document.addEventListener('DOMContentLoaded', function() {
     assignButtons.forEach(button => {
         button.addEventListener('click', function() {
             const programId = this.getAttribute('data-program-id');
-            document.getElementById('program_id').value = programId;
+            if (programId) {
+                const programIdInput = document.getElementById('program_id');
+                if (programIdInput) {
+                    programIdInput.value = programId;
+                    console.log('Program ID ayarlandı:', programId);
+                }
+            }
         });
     });
+
+    // Program silme butonuna tıklandığında
+    const deleteButtons = document.querySelectorAll('[data-bs-target="#deleteProgramModal"]');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const programId = this.getAttribute('data-program-id');
+            const programTitle = this.getAttribute('data-program-title');
+            if (programId) {
+                const programIdInput = document.getElementById('delete_program_id');
+                const programTitleElement = document.getElementById('deleteProgramTitle');
+                if (programIdInput && programTitleElement) {
+                    programIdInput.value = programId;
+                    programTitleElement.textContent = programTitle;
+                }
+            }
+        });
+    });
+
+    // Form gönderilmeden önce kontrol
+    const assignPlanForm = document.querySelector('#assignPlanModal form');
+    if (assignPlanForm) {
+        assignPlanForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Formu geçici olarak durdur
+
+            const programId = document.getElementById('program_id')?.value;
+            const clientSelect = document.getElementById('id_client');
+            const startDateInput = document.getElementById('id_start_date');
+            const endDateInput = document.getElementById('id_end_date');
+            const isActiveInput = document.getElementById('id_is_active');
+
+            console.log('Form elemanları:', {
+                programId: programId,
+                clientSelect: clientSelect?.value,
+                startDateInput: startDateInput?.value,
+                endDateInput: endDateInput?.value,
+                isActiveInput: isActiveInput?.checked
+            });
+
+            // Tüm alanların varlığını kontrol et
+            if (!programId || !clientSelect || !startDateInput || !endDateInput) {
+                console.error('Eksik form elemanları:', {
+                    programId: !!programId,
+                    clientSelect: !!clientSelect,
+                    startDateInput: !!startDateInput,
+                    endDateInput: !!endDateInput
+                });
+                alert('Form alanları bulunamadı. Lütfen sayfayı yenileyip tekrar deneyin.');
+                return;
+            }
+
+            // Değerlerin boş olup olmadığını kontrol et
+            if (!programId.trim() || !clientSelect.value.trim() || !startDateInput.value.trim() || !endDateInput.value.trim()) {
+                console.error('Boş form değerleri:', {
+                    programId: programId.trim(),
+                    client: clientSelect.value.trim(),
+                    startDate: startDateInput.value.trim(),
+                    endDate: endDateInput.value.trim()
+                });
+                alert('Lütfen tüm alanları doldurun.');
+                return;
+            }
+
+            // Tarih kontrolü
+            const startDate = new Date(startDateInput.value);
+            const endDate = new Date(endDateInput.value);
+            
+            if (startDate > endDate) {
+                alert('Bitiş tarihi başlangıç tarihinden önce olamaz.');
+                return;
+            }
+
+            // Tüm kontroller başarılıysa formu gönder
+            this.submit();
+        });
+    }
 });
 </script>
 {% endblock %}

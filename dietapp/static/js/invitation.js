@@ -5,6 +5,7 @@ function sendInvitation(event) {
     const resultDiv = document.getElementById('invitationResult');
     const submitButton = document.getElementById('submitButton');
     const email = document.getElementById('email').value;
+    const invitationUrl = form.dataset.invitationUrl;
     
     // Submit butonunu devre dışı bırak
     submitButton.disabled = true;
@@ -14,7 +15,7 @@ function sendInvitation(event) {
     resultDiv.classList.add('d-none');
     resultDiv.classList.remove('alert-success', 'alert-danger');
     
-    fetch('{% url "invitations:create_invitation" %}', {
+    fetch(invitationUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -22,12 +23,7 @@ function sendInvitation(event) {
         },
         body: `email=${encodeURIComponent(email)}`
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Sunucu hatası: ' + response.status);
-        }
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
         if (data.success) {
             resultDiv.classList.remove('d-none');
@@ -45,13 +41,13 @@ function sendInvitation(event) {
         } else {
             resultDiv.classList.remove('d-none');
             resultDiv.classList.add('alert-danger');
-            resultDiv.textContent = data.error;
+            resultDiv.textContent = 'Davetiye gönderilemedi. Lütfen daha sonra tekrar deneyin.';
         }
     })
-    .catch(error => {
+    .catch(() => {
         resultDiv.classList.remove('d-none');
         resultDiv.classList.add('alert-danger');
-        resultDiv.textContent = error.message;
+        resultDiv.textContent = 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.';
     })
     .finally(() => {
         // Submit butonunu tekrar aktif et
@@ -64,29 +60,25 @@ function sendInvitation(event) {
 
 function resendInvitation(token) {
     if (confirm('Davetiyeyi tekrar göndermek istediğinizden emin misiniz?')) {
-        fetch(`{% url "invitations:resend_invitation" token=0 %}`.replace('0', token), {
+        const resendUrl = `/invitations/${token}/resend/`;
+        fetch(resendUrl, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
             },
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Sunucu hatası: ' + response.status);
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
             if (data.success) {
                 alert('Davetiye başarıyla tekrar gönderildi!');
                 // Sayfayı yenile
                 window.location.reload();
             } else {
-                alert(data.error);
+                alert('Davetiye gönderilemedi. Lütfen daha sonra tekrar deneyin.');
             }
         })
-        .catch(error => {
-            alert(error.message);
+        .catch(() => {
+            alert('Bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
         });
     }
 } 

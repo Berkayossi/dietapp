@@ -18,4 +18,5 @@ urlpatterns = [
     path('add-meal-food/<int:meal_id>/', views.add_meal_food, name='add_meal_food'),
     path('delete-meal-food/<int:meal_food_id>/', views.delete_meal_food, name='delete_meal_food'),
     path('delete-meal/<int:meal_id>/', views.delete_meal, name='delete_meal'),
+    path('delete/', views.delete_program, name='delete_program'),
 ] 

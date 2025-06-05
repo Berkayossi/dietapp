@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 
+
 # Her müşteriye ait bilgileri tutar. Her müşteri bir kullanıcıdır (CustomUser) ve bir diyetisyene bağlıdır.
 class ClientProfile(models.Model):
     # Kullanıcı hesabıyla birebir ilişki (her müşteri bir kullanıcıdır)
@@ -38,6 +39,12 @@ class Client(models.Model):
     class Meta:
         verbose_name = "Müşteri"
         verbose_name_plural = "Müşteriler"
+
+    @property
+    def plans(self):
+        """Müşterinin tüm planlarını döndürür"""
+        from plans.models import Plan
+        return Plan.objects.filter(client=self)
 
 # Müşterinin zamanla ölçülen gelişim verilerini tutar
 class ProgressRecord(models.Model):

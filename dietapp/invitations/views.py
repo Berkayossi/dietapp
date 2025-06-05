@@ -14,6 +14,8 @@ from django.utils.html import strip_tags
 from .forms import InvitationForm
 from .models import Invitation
 from clients.models import Client
+from accounts.forms import UserRegistrationForm
+from accounts.models import CustomUser
 
 User = get_user_model()
 
@@ -71,30 +73,11 @@ def invite_register(request, token):
         return HttpResponse("Geçersiz veya süresi dolmuş davet.", status=400)
 
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password1 = request.POST.get('password1')
-        password2 = request.POST.get('password2')
-
-        if password1 != password2:
-            messages.error(request, "Şifreler eşleşmiyor.")
-        elif User.objects.filter(username=username).exists():
-            messages.error(request, "Bu kullanıcı adı zaten alınmış.")
-        else:
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
             try:
-                # Kullanıcıyı oluştur
-                user = User.objects.create_user(
-                    username=username,
-                    email=invitation.email,
-                    password=password1,
-                    user_type='client'  # Davet edilen kullanıcılar client olarak ayarlanıyor
-                )
-                
-                # Client profilini oluştur
-                Client.objects.create(user=user)
-                
-                # Davetiyeyi kullanıldı olarak işaretle
-                invitation.used = True
-                invitation.save()
+                # Kullanıcıyı oluştur ve davetiyeyi işaretle
+                user = form.save(invitation=invitation)
                 
                 # Kullanıcıyı sisteme giriş yaptır
                 login(request, user)
@@ -104,15 +87,24 @@ def invite_register(request, token):
                 return redirect('home')
             except Exception as e:
                 messages.error(request, f"Kayıt sırasında bir hata oluştu: {str(e)}")
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
+    else:
+        form = UserRegistrationForm()
 
-    return render(request, 'invitations/invite_register.html', {'email': invitation.email})
+    return render(request, 'invitations/invite_register.html', {
+        'email': invitation.email,
+        'form': form
+    })
 
 @login_required
 def create_invitation(request):
     if not request.user.is_staff:
         return JsonResponse({
             'success': False,
-            'error': 'Bu işlemi yapmak için yönetici yetkisine sahip olmanız gerekiyor.'
+            'error': 'Bu işlemi yapmak için yetkiniz bulunmuyor.'
         })
     
     if request.method == 'POST':
@@ -126,19 +118,17 @@ def create_invitation(request):
         if Invitation.objects.filter(email=email, used=False).exists():
             return JsonResponse({
                 'success': False,
-                'error': 'Bu e-posta adresi için zaten aktif bir davetiye bulunuyor. Lütfen önceki davetiyenin süresinin dolmasını bekleyin veya farklı bir e-posta adresi kullanın.'
+                'error': 'Bu e-posta adresi için zaten aktif bir davetiye bulunuyor.'
             })
         
         invitation = Invitation.objects.create(email=email)
         invite_link = request.build_absolute_uri(f"/invitations/{invitation.token}/")
         
-        # HTML email template
         html_message = render_to_string('invitations/email/invitation_email.html', {
             'invite_link': invite_link,
             'email': email
         })
         
-        # Plain text version
         plain_message = strip_tags(html_message)
         
         try:
@@ -153,26 +143,14 @@ def create_invitation(request):
             return JsonResponse({'success': True})
         except Exception as e:
             invitation.delete()
-            error_message = str(e)
-            if "SMTP" in error_message:
-                return JsonResponse({
-                    'success': False,
-                    'error': 'E-posta gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.'
-                })
-            elif "timeout" in error_message.lower():
-                return JsonResponse({
-                    'success': False, 
-                    'error': 'E-posta sunucusuna bağlanırken zaman aşımı oluştu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.'
-                })
-            else:
-                return JsonResponse({
-                    'success': False, 
-                    'error': 'Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.'
-                })
+            return JsonResponse({
+                'success': False,
+                'error': 'Davetiye gönderilemedi. Lütfen daha sonra tekrar deneyin.'
+            })
     
     return JsonResponse({
         'success': False,
-        'error': 'Geçersiz istek. Lütfen sayfayı yenileyip tekrar deneyin.'
+        'error': 'Geçersiz istek.'
     })
 
 @login_required
@@ -180,7 +158,7 @@ def resend_invitation(request, token):
     if not request.user.is_staff:
         return JsonResponse({
             'success': False,
-            'error': 'Bu işlemi yapmak için yönetici yetkisine sahip olmanız gerekiyor.'
+            'error': 'Bu işlemi yapmak için yetkiniz bulunmuyor.'
         })
     
     invitation = get_object_or_404(Invitation, token=token)
@@ -188,18 +166,16 @@ def resend_invitation(request, token):
     if invitation.used:
         return JsonResponse({
             'success': False,
-            'error': 'Bu davetiye daha önce kullanılmış. Yeni bir davetiye oluşturmanız gerekiyor.'
+            'error': 'Bu davetiye daha önce kullanılmış.'
         })
         
     invite_link = request.build_absolute_uri(f"/invitations/{invitation.token}/")
     
-    # HTML email template
     html_message = render_to_string('invitations/email/invitation_email.html', {
         'invite_link': invite_link,
         'email': invitation.email
     })
     
-    # Plain text version
     plain_message = strip_tags(html_message)
     
     try:
@@ -213,19 +189,7 @@ def resend_invitation(request, token):
         )
         return JsonResponse({'success': True})
     except Exception as e:
-        error_message = str(e)
-        if "SMTP" in error_message:
-            return JsonResponse({
-                'success': False,
-                'error': 'E-posta gönderilirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.'
-            })
-        elif "timeout" in error_message.lower():
-            return JsonResponse({
-                'success': False, 
-                'error': 'E-posta sunucusuna bağlanırken zaman aşımı oluştu. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.'
-            })
-        else:
-            return JsonResponse({
-                'success': False, 
-                'error': 'Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.'
-            })
+        return JsonResponse({
+            'success': False,
+            'error': 'Davetiye gönderilemedi. Lütfen daha sonra tekrar deneyin.'
+        })

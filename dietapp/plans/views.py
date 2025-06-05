@@ -71,12 +71,23 @@ def is_admin(user):
 @user_passes_test(is_admin)
 def nutrition_plans(request):
     """Yönetici için beslenme programları listesi"""
-    programs = NutritionProgram.objects.all().order_by('-created_at')
-    clients = Client.objects.all()
+    # Tüm şablon programları al (kopya olmayanlar)
+    programs = NutritionProgram.objects.filter(
+        is_copy=False  # Sadece orijinal şablonları göster
+    ).order_by('-created_at')
+    
+    # Müşteri programlarını al (kopya olanlar)
+    client_plans = Plan.objects.select_related(
+        'client__user',
+        'program_copy'
+    ).filter(
+        program_copy__is_copy=True  # Sadece kopya programları göster
+    ).order_by('-created_at')
     
     context = {
         'programs': programs,
-        'clients': clients,
+        'client_plans': client_plans,
+        'clients': Client.objects.select_related('user').all().order_by('user__first_name', 'user__last_name'),
         'program_form': NutritionProgramForm(),
         'plan_form': PlanForm()
     }
@@ -101,13 +112,60 @@ def assign_plan(request):
     """Müşteriye beslenme programı atama"""
     if request.method == 'POST':
         program_id = request.POST.get('program_id')
-        form = PlanForm(request.POST)
-        if form.is_valid():
-            plan = form.save(commit=False)
-            plan.program_id = program_id
-            plan.save()
+        client_id = request.POST.get('client')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        is_active = request.POST.get('is_active') == 'on'  # Checkbox değerini boolean'a çevir
+        
+        try:
+            program = NutritionProgram.objects.get(id=program_id)
+            client = Client.objects.get(id=client_id)
+            
+            # Eğer yeni plan aktif olacaksa, diğer aktif planları pasife çek
+            if is_active:
+                Plan.objects.filter(client=client, is_active=True).update(is_active=False)
+            
+            # Programın bir kopyasını oluştur
+            program_copy = NutritionProgram.objects.create(
+                title=f"{program.title} - {client.user.get_full_name() or client.user.username}",
+                description=program.description,
+                diet_type=program.diet_type,
+                total_days=program.total_days,
+                is_active=True,
+                is_copy=True  # Kopya olduğunu belirt
+            )
+            
+            # Öğünleri kopyala
+            for meal in program.meals.all():
+                meal_copy = meal
+                meal_copy.id = None  # Yeni ID oluşturulacak
+                meal_copy.program = program_copy
+                meal_copy.save()
+                
+                # Öğün besinlerini kopyala
+                for meal_food in meal.meal_foods.all():
+                    meal_food_copy = meal_food
+                    meal_food_copy.id = None  # Yeni ID oluşturulacak
+                    meal_food_copy.meal = meal_copy
+                    meal_food_copy.save()
+            
+            plan = Plan.objects.create(
+                program=program,
+                program_copy=program_copy,
+                client=client,
+                start_date=start_date,
+                end_date=end_date,
+                is_active=is_active,
+                status='active'
+            )
+            
             messages.success(request, 'Program başarıyla müşteriye atandı.')
             return redirect('plans:nutrition_plans')
+        except (NutritionProgram.DoesNotExist, Client.DoesNotExist):
+            messages.error(request, 'Program veya müşteri bulunamadı.')
+        except Exception as e:
+            messages.error(request, f'Bir hata oluştu: {str(e)}')
+            
     return redirect('plans:nutrition_plans')
 
 @login_required
@@ -115,7 +173,11 @@ def nutrition_plan_detail(request, program_id):
     program = get_object_or_404(NutritionProgram, id=program_id)
     
     # URL'den gün parametresini al, yoksa 1. günü göster
-    current_day = int(request.GET.get('day', 1))
+    current_day = request.GET.get('day', 1)
+    try:
+        current_day = int(current_day)
+    except (ValueError, TypeError):
+        current_day = 1
     
     # Gün numarası geçerli mi kontrol et
     if current_day < 1:
@@ -304,3 +366,24 @@ def delete_meal_food(request, meal_food_id):
             return JsonResponse({'success': False, 'error': str(e)})
     
     return JsonResponse({'success': False, 'error': 'Geçersiz istek metodu'})
+
+@login_required
+@user_passes_test(is_admin)
+def delete_program(request):
+    """Beslenme programını silme"""
+    if request.method == 'POST':
+        program_id = request.POST.get('program_id')
+        try:
+            program = NutritionProgram.objects.get(id=program_id)
+            # Eğer program müşterilere atanmışsa silme
+            if program.original_plans.exists() or program.copied_plans.exists():
+                messages.error(request, 'Bu program müşterilere atanmış durumda. Önce müşteri atamalarını kaldırın.')
+            else:
+                program.delete()
+                messages.success(request, 'Program başarıyla silindi.')
+        except NutritionProgram.DoesNotExist:
+            messages.error(request, 'Program bulunamadı.')
+        except Exception as e:
+            messages.error(request, f'Bir hata oluştu: {str(e)}')
+            
+    return redirect('plans:nutrition_plans')

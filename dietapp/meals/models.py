@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.db.models import Sum, F, ExpressionWrapper, DecimalField
 
 class Food(models.Model):
     name = models.CharField(max_length=100, verbose_name="Besin Adı")
@@ -76,6 +77,10 @@ class Meal(models.Model):
             total += (food.fat * amount) / 100
         return round(total, 1)
 
+    def save(self, *args, **kwargs):
+        """Öğün kaydedildiğinde gerekli güncellemeleri yap"""
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = "Öğün"
         verbose_name_plural = "Öğünler"
@@ -105,6 +110,10 @@ class MealFood(models.Model):
     @property
     def carbs(self):
         return (self.food.carbs * self.amount) / 100
+
+    def save(self, *args, **kwargs):
+        """Besin eklendiğinde gerekli güncellemeleri yap"""
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Öğün Besini"

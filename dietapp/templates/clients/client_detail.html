@@ -43,17 +43,15 @@
                     <div class="card mb-4">
                         <div class="card-body">
                             <h5 class="card-title">Aktif Beslenme Programı</h5>
-                            {% if client.user.plans.filter.is_active %}
-                                {% with active_plan=client.user.plans.filter.is_active.first %}
+                            {% if active_plan %}
                                 <p class="card-text">
-                                    <strong>Program:</strong> {{ active_plan.title }}<br>
+                                    <strong>Program:</strong> {{ active_plan.program_copy.title }}<br>
                                     <strong>Başlangıç:</strong> {{ active_plan.start_date|date:"d/m/Y" }}<br>
                                     <strong>Bitiş:</strong> {{ active_plan.end_date|date:"d/m/Y" }}
                                 </p>
-                                <a href="{% url 'plans:nutrition_plan_detail' active_plan.id %}" class="btn btn-primary btn-sm">
+                                <a href="{% url 'plans:nutrition_plan_detail' active_plan.program_copy.id %}" class="btn btn-primary btn-sm">
                                     Programı Görüntüle
                                 </a>
-                                {% endwith %}
                             {% else %}
                                 <p class="card-text text-muted">Aktif beslenme programı bulunmuyor.</p>
                             {% endif %}

@@ -139,7 +139,7 @@
                 <h5 class="modal-title">Yeni Davetiye Oluştur</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form id="invitationForm" onsubmit="return sendInvitation(event)">
+            <form id="invitationForm" onsubmit="return sendInvitation(event)" data-invitation-url="{% url 'invitations:create_invitation' %}">
                 {% csrf_token %}
                 <div class="modal-body">
                     <div class="mb-3">

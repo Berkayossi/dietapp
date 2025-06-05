@@ -31,15 +31,6 @@
                 </div>
             </div>
 
-            <!-- Program Detayları -->
-            <div class="program-info mb-4">
-                <h5 class="mb-3">Program Bilgileri</h5>
-                <p class="mb-3">{{ program.description }}</p>
-                <span class="badge {% if program.is_active %}bg-success{% else %}bg-secondary{% endif %} p-2">
-                    {% if program.is_active %}Aktif{% else %}Pasif{% endif %}
-                </span>
-            </div>
-
             <!-- Gün Seçici -->
             <div class="day-selector mb-4">
                 <div class="d-flex justify-content-center align-items-center">
@@ -50,6 +41,44 @@
                             <option value="{{ forloop.counter }}" {% if forloop.counter == current_day %}selected{% endif %}>Gün {{ forloop.counter }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Program Detayları -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="program-info mb-4">
+                        <h5 class="mb-3">Program Bilgileri</h5>
+                        <p class="mb-3">{{ program.description }}</p>
+                        <span class="badge {% if program.is_active %}bg-success{% else %}bg-secondary{% endif %} p-2">
+                            {% if program.is_active %}Aktif{% else %}Pasif{% endif %}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Gün {{ current_day }} Besin Değerleri</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Kalori:</span>
+                                <strong>{{ current_day_meals|sum_calories }} kcal</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Protein:</span>
+                                <strong>{{ current_day_meals|sum_protein }}g</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Karbonhidrat:</span>
+                                <strong>{{ current_day_meals|sum_carbs }}g</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Yağ:</span>
+                                <strong>{{ current_day_meals|sum_fat }}g</strong>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -468,8 +497,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Gün seçici için
     const daySelector = document.getElementById('daySelector');
     daySelector.addEventListener('change', function() {
-        window.location.href = `?day=${this.value}`;
+        const selectedDay = this.value;
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('day', selectedDay);
+        window.location.href = currentUrl.toString();
     });
+
+    // Sayfa yüklendiğinde gün seçiciyi ayarla
+    const urlParams = new URLSearchParams(window.location.search);
+    const dayParam = urlParams.get('day');
+    if (dayParam) {
+        daySelector.value = dayParam;
+    }
 });
 </script>
 {% endblock %} 

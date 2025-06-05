@@ -5,7 +5,7 @@ from meals.models import Meal, MealFood
 class NutritionProgramForm(forms.ModelForm):
     class Meta:
         model = NutritionProgram
-        fields = ['title', 'description', 'total_days', 'is_active']
+        fields = ['title', 'description', 'diet_type', 'total_days', 'is_active']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
         }

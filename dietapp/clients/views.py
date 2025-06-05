@@ -20,6 +20,9 @@ def client_detail(request, client_id):
     """Müşteri detay sayfası"""
     client = get_object_or_404(Client, id=client_id)
     
+    # Aktif planı al
+    active_plan = client.plans.filter(is_active=True).first()
+    
     if request.method == 'POST':
         form = ProgressRecordForm(request.POST)
         if form.is_valid():
@@ -34,5 +37,6 @@ def client_detail(request, client_id):
     context = {
         'client': client,
         'form': form,
+        'active_plan': active_plan,
     }
     return render(request, 'clients/client_detail.html', context)
